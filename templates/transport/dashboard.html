@@ -1,0 +1,215 @@
+{% extends "base.html" %}
+{% block title %}UzTransport — Boshqaruv paneli{% endblock %}
+
+{% block extra_head %}
+<style>
+.dash-layout { display:flex; min-height:100vh; }
+.dash-nav {
+  width:220px; background:var(--c-surface); border-right:1px solid var(--c-border);
+  padding:20px 0; display:flex; flex-direction:column;
+}
+.dash-brand { padding:0 20px 20px; border-bottom:1px solid var(--c-border); margin-bottom:16px; }
+.dash-brand h2 { font-size:16px; font-weight:700; }
+.dash-brand h2 span { color:var(--c-accent); }
+.dash-brand p { font-size:11px; color:var(--c-muted); margin-top:2px; }
+.nav-item {
+  display:flex; align-items:center; gap:10px; padding:10px 20px;
+  font-size:13px; font-weight:500; cursor:pointer;
+  color:var(--c-muted); transition:.15s; border-left:3px solid transparent;
+}
+.nav-item:hover { color:var(--c-text); background:rgba(255,255,255,0.03); }
+.nav-item.active { color:var(--c-accent); border-left-color:var(--c-accent); background:rgba(0,212,255,0.05); }
+
+.dash-main { flex:1; padding:24px; overflow-y:auto; }
+.dash-title { font-size:22px; font-weight:700; margin-bottom:20px; }
+.dash-title span { color:var(--c-accent); }
+
+/* Stats cards */
+.kpi-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(190px,1fr)); gap:14px; margin-bottom:24px; }
+.kpi-card {
+  background:var(--c-surface); border:1px solid var(--c-border);
+  border-radius:var(--radius); padding:18px; position:relative; overflow:hidden;
+}
+.kpi-card::before {
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+}
+.kpi-card.blue::before { background:linear-gradient(90deg,var(--c-accent),#0077ff); }
+.kpi-card.green::before { background:linear-gradient(90deg,#22c55e,#15803d); }
+.kpi-card.orange::before { background:linear-gradient(90deg,#ff6b35,#ff4500); }
+.kpi-card.purple::before { background:linear-gradient(90deg,#a855f7,#7c3aed); }
+.kpi-icon { font-size:24px; margin-bottom:10px; }
+.kpi-val { font-size:32px; font-weight:700; font-family:var(--font-mono); }
+.kpi-label { font-size:12px; color:var(--c-muted); margin-top:4px; }
+.kpi-change { font-size:11px; margin-top:6px; }
+.kpi-change.up { color:var(--c-green); }
+
+/* Table */
+.table-wrap { background:var(--c-surface); border:1px solid var(--c-border); border-radius:var(--radius); overflow:hidden; }
+.table-header { padding:14px 20px; border-bottom:1px solid var(--c-border); display:flex; justify-content:space-between; align-items:center; }
+.table-title { font-size:14px; font-weight:700; }
+table { width:100%; border-collapse:collapse; }
+th { padding:10px 16px; text-align:left; font-size:11px; color:var(--c-muted); text-transform:uppercase; letter-spacing:.5px; background:var(--c-card); border-bottom:1px solid var(--c-border); }
+td { padding:10px 16px; font-size:13px; border-bottom:1px solid rgba(255,255,255,0.04); }
+tr:hover td { background:rgba(255,255,255,0.02); }
+tr:last-child td { border-bottom:none; }
+.badge {
+  padding:2px 8px; border-radius:10px; font-size:11px; font-weight:600; font-family:var(--font-mono);
+}
+.badge-online { background:rgba(34,197,94,0.15); color:#22c55e; }
+.badge-offline { background:rgba(100,116,139,0.15); color:#64748b; }
+.badge-route { color:#fff; }
+
+/* Refresh btn */
+.btn-refresh {
+  padding:7px 14px; background:var(--c-card); border:1px solid var(--c-border);
+  color:var(--c-text); border-radius:7px; font-size:12px; cursor:pointer; transition:.2s;
+}
+.btn-refresh:hover { border-color:var(--c-accent); color:var(--c-accent); }
+
+/* Live indicator */
+.live-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--c-green); animation:pulse-green 1.5s infinite; margin-right:6px; }
+@keyframes pulse-green { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+
+/* Chart placeholder */
+.chart-area { 
+  background:var(--c-card); border-radius:8px; padding:20px; 
+  text-align:center; color:var(--c-muted); font-size:13px; height:140px;
+  display:flex; align-items:center; justify-content:center;
+}
+.grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:24px; }
+@media(max-width:900px){ .grid2{grid-template-columns:1fr;} }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="dash-layout">
+  <nav class="dash-nav">
+    <div class="dash-brand">
+      <h2>Uz<span>Transport</span></h2>
+      <p>Boshqaruv paneli</p>
+    </div>
+    <div class="nav-item active" onclick="loadTab('overview')">📊 Umumiy ko'rinish</div>
+    <div class="nav-item" onclick="loadTab('vehicles')">🚌 Transportlar</div>
+    <div class="nav-item" onclick="loadTab('routes')">🛣 Yo'nalishlar</div>
+    <div class="nav-item" onclick="loadTab('regions')">🗺 Viloyatlar</div>
+    <div style="flex:1;"></div>
+    <div class="nav-item" onclick="location.href='/'">🗺 Xarita</div>
+    <div class="nav-item" onclick="location.href='/driver/'">🚌 Haydovchi</div>
+    <div class="nav-item" onclick="location.href='/admin/'">⚙️ Admin panel</div>
+  </nav>
+
+  <main class="dash-main">
+    <div class="dash-title"><span class="live-dot"></span>Umumiy <span>ko'rinish</span></div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid" id="kpiGrid">
+      <div class="kpi-card blue"><div class="kpi-icon">🚌</div><div class="kpi-val" id="kpi-total">—</div><div class="kpi-label">Jami transport</div></div>
+      <div class="kpi-card green"><div class="kpi-icon">✅</div><div class="kpi-val" id="kpi-online">—</div><div class="kpi-label">Onlayn hozir</div></div>
+      <div class="kpi-card orange"><div class="kpi-icon">🛣</div><div class="kpi-val" id="kpi-routes">—</div><div class="kpi-label">Faol yo'nalishlar</div></div>
+      <div class="kpi-card purple"><div class="kpi-icon">🗺</div><div class="kpi-val" id="kpi-regions">—</div><div class="kpi-label">Viloyatlar</div></div>
+    </div>
+
+    <div class="grid2">
+      <div class="table-wrap">
+        <div class="table-header">
+          <span class="table-title">🚌 Transport holati</span>
+          <button class="btn-refresh" onclick="loadData()">↻ Yangilash</button>
+        </div>
+        <table id="vehiclesTable">
+          <thead><tr><th>Raqam</th><th>Yo'nalish</th><th>Holat</th><th>Yo'lovchi</th></tr></thead>
+          <tbody id="vehiclesTbody"><tr><td colspan="4" style="text-align:center;color:var(--c-muted);padding:20px;">Yuklanmoqda...</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="table-wrap">
+        <div class="table-header">
+          <span class="table-title">🛣 Yo'nalishlar</span>
+        </div>
+        <table>
+          <thead><tr><th>Raqam</th><th>Turi</th><th>Onlayn</th></tr></thead>
+          <tbody id="routesTbody"><tr><td colspan="3" style="text-align:center;color:var(--c-muted);padding:20px;">Yuklanmoqda...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Regions table -->
+    <div class="table-wrap" style="margin-bottom:24px;">
+      <div class="table-header">
+        <span class="table-title">🗺 Viloyatlar</span>
+      </div>
+      <table>
+        <thead><tr><th>Viloyat</th><th>Kod</th><th>Koordinata</th></tr></thead>
+        <tbody id="regionsTbody"></tbody>
+      </table>
+    </div>
+  </main>
+</div>
+
+<script>
+const API = '/api';
+let refreshTimer;
+
+async function loadData() {
+  // Stats
+  try {
+    const r = await fetch(`${API}/stats/`);
+    const d = await r.json();
+    document.getElementById('kpi-total').textContent = d.total_vehicles || 0;
+    document.getElementById('kpi-online').textContent = d.online_vehicles || 0;
+    document.getElementById('kpi-routes').textContent = d.total_routes || 0;
+    document.getElementById('kpi-regions').textContent = d.total_regions || 0;
+  } catch(e) {}
+
+  // Regions
+  try {
+    const r = await fetch(`${API}/regions/`);
+    const regions = await r.json();
+    document.getElementById('regionsTbody').innerHTML = regions.map(rg => `
+      <tr>
+        <td><strong>${rg.name_uz}</strong></td>
+        <td><span style="font-family:var(--font-mono);color:var(--c-accent);font-size:12px;">${rg.code}</span></td>
+        <td style="color:var(--c-muted);font-size:12px;">${rg.center_lat.toFixed(4)}, ${rg.center_lng.toFixed(4)}</td>
+      </tr>
+    `).join('');
+
+    // Load routes for first region
+    if (regions.length) {
+      const rr = await fetch(`${API}/regions/${regions[0].code}/routes/`);
+      const routes = await rr.json();
+      document.getElementById('routesTbody').innerHTML = routes.length ? routes.map(rt => `
+        <tr>
+          <td><span class="badge badge-route" style="background:${rt.color}">${rt.route_number}</span> ${rt.route_name}</td>
+          <td style="font-size:12px;color:var(--c-muted);">${typeLabel(rt.transport_type)}</td>
+          <td><span style="color:var(--c-green);font-weight:700;">${rt.online_vehicles || 0}</span></td>
+        </tr>
+      `).join('') : '<tr><td colspan="3" style="text-align:center;color:var(--c-muted);padding:16px;">Yo\'nalish yo\'q</td></tr>';
+    }
+  } catch(e) {}
+
+  // Vehicles — try TSH
+  try {
+    const r = await fetch(`${API}/regions/TSH/routes/`);
+    const routes = await r.json();
+    if (routes.length) {
+      const vr = await fetch(`${API}/routes/${routes[0].id}/vehicles/`);
+      const vehicles = await vr.json();
+      document.getElementById('vehiclesTbody').innerHTML = vehicles.length ? vehicles.map(v => `
+        <tr>
+          <td><span style="font-family:var(--font-mono);font-size:12px;">${v.plate_number}</span></td>
+          <td><span class="badge badge-route" style="background:${v.route_color}">${v.route_number}</span></td>
+          <td><span class="badge ${v.is_online ? 'badge-online' : 'badge-offline'}">${v.is_online ? '● ONLAYN' : '○ OFFLAYN'}</span></td>
+          <td>${v.current_passengers} / ${v.capacity}</td>
+        </tr>
+      `).join('') : '<tr><td colspan="4" style="text-align:center;color:var(--c-muted);padding:16px;">Transport yo\'q</td></tr>';
+    }
+  } catch(e) {}
+}
+
+function typeLabel(t) {
+  return {bus:'🚌 Avtobus',marshrutka:'🚐 Marshrutka',trolleybus:'🚎 Trolleybus',metro:'🚇 Metro'}[t] || t;
+}
+
+loadData();
+refreshTimer = setInterval(loadData, 15000);
+</script>
+{% endblock %}

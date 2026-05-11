@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}UzTransport Live{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root {
+    --c-bg: #0a0e1a;
+    --c-surface: #111827;
+    --c-card: #1a2235;
+    --c-border: #1e2d45;
+    --c-accent: #00d4ff;
+    --c-accent2: #ff6b35;
+    --c-green: #22c55e;
+    --c-yellow: #f59e0b;
+    --c-red: #ef4444;
+    --c-text: #e2e8f0;
+    --c-muted: #64748b;
+    --font-main: 'Golos Text', sans-serif;
+    --font-mono: 'Space Mono', monospace;
+    --radius: 12px;
+    --shadow: 0 4px 24px rgba(0,212,255,0.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: var(--font-main); background: var(--c-bg); color: var(--c-text); }
+  a { color: var(--c-accent); text-decoration: none; }
+  button { cursor: pointer; font-family: var(--font-main); }
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--c-surface); }
+  ::-webkit-scrollbar-thumb { background: var(--c-border); border-radius: 3px; }
+</style>
+{% block extra_head %}{% endblock %}
+</head>
+<body>
+{% block body %}{% endblock %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

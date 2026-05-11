@@ -1,0 +1,465 @@
+{% extends "base.html" %}
+{% block title %}UzTransport — Haydovchi paneli{% endblock %}
+
+{% block extra_head %}
+<style>
+body { min-height:100vh; background:var(--c-bg); display:flex; flex-direction:column; }
+.driver-app { display:flex; flex-direction:column; min-height:100vh; max-width:480px; margin:0 auto; padding:20px 16px; }
+
+/* Header */
+.driver-header { text-align:center; margin-bottom:28px; }
+.driver-logo { font-size:48px; margin-bottom:8px; }
+.driver-title { font-size:24px; font-weight:700; }
+.driver-title span { color:var(--c-accent2); }
+.driver-subtitle { font-size:13px; color:var(--c-muted); margin-top:4px; }
+
+/* Login card */
+.card {
+  background:var(--c-surface); border:1px solid var(--c-border);
+  border-radius:var(--radius); padding:20px;
+  box-shadow:var(--shadow); margin-bottom:16px;
+}
+.card h3 { font-size:15px; font-weight:700; margin-bottom:16px; color:var(--c-accent); }
+
+.form-group { margin-bottom:14px; }
+.form-label { font-size:12px; color:var(--c-muted); text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; display:block; }
+.form-input {
+  width:100%; padding:11px 14px;
+  background:var(--c-card); border:1px solid var(--c-border);
+  color:var(--c-text); border-radius:8px;
+  font-family:var(--font-main); font-size:14px;
+  transition: border-color .2s;
+}
+.form-input:focus { outline:none; border-color:var(--c-accent); }
+
+.btn-primary {
+  width:100%; padding:13px;
+  background:linear-gradient(135deg, var(--c-accent), #0077ff);
+  border:none; border-radius:8px; color:#fff;
+  font-size:15px; font-weight:700; letter-spacing:.3px;
+  transition:.2s; box-shadow:0 4px 20px rgba(0,212,255,0.25);
+}
+.btn-primary:hover { transform:translateY(-1px); box-shadow:0 6px 24px rgba(0,212,255,0.35); }
+.btn-primary:active { transform:translateY(0); }
+.btn-primary:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+
+.btn-danger {
+  width:100%; padding:11px;
+  background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3);
+  color:var(--c-red); border-radius:8px; font-size:14px; font-weight:600;
+  transition:.2s;
+}
+.btn-danger:hover { background:rgba(239,68,68,0.2); }
+
+.btn-secondary {
+  flex:1; padding:11px;
+  background:var(--c-card); border:1px solid var(--c-border);
+  color:var(--c-text); border-radius:8px; font-size:13px; font-weight:600;
+  transition:.2s;
+}
+.btn-secondary:hover { border-color:var(--c-accent); }
+
+/* Status card */
+.status-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px; }
+.status-item {
+  background:var(--c-card); border:1px solid var(--c-border);
+  border-radius:8px; padding:12px; text-align:center;
+}
+.status-val { font-size:20px; font-weight:700; font-family:var(--font-mono); }
+.status-label { font-size:11px; color:var(--c-muted); margin-top:2px; }
+
+/* GPS indicator */
+.gps-status {
+  display:flex; align-items:center; gap:10px;
+  padding:12px 16px; border-radius:8px;
+  background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2);
+  margin-bottom:14px; font-size:13px; color:#fca5a5;
+}
+.gps-status.active { background:rgba(34,197,94,0.1); border-color:rgba(34,197,94,0.2); color:#86efac; }
+.gps-dot { width:10px; height:10px; border-radius:50%; background:var(--c-red); }
+.gps-status.active .gps-dot { background:var(--c-green); animation:gps-pulse 1s infinite; }
+@keyframes gps-pulse { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.5);opacity:.6;} }
+
+/* Passengers slider */
+.passengers-wrap { margin-bottom:14px; }
+.passengers-slider { width:100%; height:6px; appearance:none; background:var(--c-border); border-radius:3px; }
+.passengers-slider::-webkit-slider-thumb {
+  appearance:none; width:18px; height:18px; border-radius:50%;
+  background:var(--c-accent2); cursor:pointer;
+}
+.passengers-display {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:8px;
+}
+.passengers-big { font-size:28px; font-weight:700; font-family:var(--font-mono); color:var(--c-accent2); }
+
+/* Occupancy bar */
+.occ-bar { height:8px; background:var(--c-border); border-radius:4px; overflow:hidden; margin-top:6px; }
+.occ-fill { height:100%; border-radius:4px; transition: width .3s, background .3s; }
+
+/* Map mini */
+#driverMap { width:100%; height:240px; border-radius:10px; border:1px solid var(--c-border); margin-bottom:14px; }
+
+/* ETA list */
+.eta-list { max-height:160px; overflow-y:auto; }
+.eta-row { display:flex; justify-content:space-between; align-items:center; padding:7px 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:12px; }
+.eta-name { color:var(--c-text); }
+.eta-badge { padding:2px 8px; border-radius:10px; font-weight:700; font-family:var(--font-mono); font-size:11px; }
+
+/* Log */
+.log-box { background:var(--c-card); border-radius:8px; padding:10px; max-height:100px; overflow-y:auto; font-family:var(--font-mono); font-size:11px; color:var(--c-muted); }
+.log-entry { padding:2px 0; border-bottom:1px solid rgba(255,255,255,0.03); }
+.log-entry.ok { color:#86efac; }
+.log-entry.err { color:#fca5a5; }
+.log-entry.info { color:#93c5fd; }
+
+/* Pages */
+.page { display:none; }
+.page.active { display:flex; flex-direction:column; }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="driver-app">
+  <div class="driver-header">
+    <div class="driver-logo">🚌</div>
+    <div class="driver-title">Uz<span>Transport</span></div>
+    <div class="driver-subtitle">Haydovchi paneli — GPS monitoring</div>
+  </div>
+
+  <!-- LOGIN PAGE -->
+  <div class="page active" id="page-login">
+    <div class="card">
+      <h3>🔐 Tizimga kirish</h3>
+      <div class="form-group">
+        <label class="form-label">Foydalanuvchi nomi</label>
+        <input class="form-input" id="loginUsername" placeholder="driver1" value="driver1">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Parol</label>
+        <input class="form-input" type="password" id="loginPassword" placeholder="••••••" value="driver123">
+      </div>
+      <button class="btn-primary" id="btnLogin">Kirish →</button>
+    </div>
+
+    <div class="card">
+      <h3>ℹ️ Demo kirish ma'lumotlari</h3>
+      <div style="font-size:12px;color:var(--c-muted);line-height:1.8;">
+        <div>👤 driver1 / driver2 / driver3</div>
+        <div>🔑 Parol: <strong style="color:var(--c-text);">driver123</strong></div>
+        <div>📋 Avval: <code style="color:var(--c-accent);">python manage.py seed_demo</code></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DRIVER PAGE -->
+  <div class="page" id="page-driver">
+    <!-- GPS Status -->
+    <div class="gps-status" id="gpsStatus">
+      <div class="gps-dot"></div>
+      <span id="gpsText">GPS kutilmoqda...</span>
+    </div>
+
+    <!-- Status Grid -->
+    <div class="status-grid">
+      <div class="status-item">
+        <div class="status-val" id="d-speed" style="color:var(--c-accent);">0</div>
+        <div class="status-label">km/h tezlik</div>
+      </div>
+      <div class="status-item">
+        <div class="status-val" id="d-accuracy" style="color:var(--c-yellow);">—</div>
+        <div class="status-label">m aniqlik</div>
+      </div>
+      <div class="status-item">
+        <div class="status-val" id="d-lat" style="color:var(--c-muted);font-size:14px;">—</div>
+        <div class="status-label">kenglik</div>
+      </div>
+      <div class="status-item">
+        <div class="status-val" id="d-lng" style="color:var(--c-muted);font-size:14px;">—</div>
+        <div class="status-label">uzunlik</div>
+      </div>
+    </div>
+
+    <!-- Passengers -->
+    <div class="card">
+      <h3>👥 Yo'lovchilar soni</h3>
+      <div class="passengers-display">
+        <span id="d-pass-label" style="font-size:13px;color:var(--c-muted);">0 / <span id="d-capacity">50</span></span>
+        <span class="passengers-big" id="d-pass-num">0</span>
+      </div>
+      <div class="passengers-wrap">
+        <input class="passengers-slider" type="range" id="passengersSlider" min="0" max="80" value="0">
+        <div class="occ-bar">
+          <div class="occ-fill" id="occFill" style="width:0%;background:#22c55e;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mini Map -->
+    <div id="driverMap"></div>
+
+    <!-- ETA -->
+    <div class="card">
+      <h3>⏱ Bekatlargacha ETA</h3>
+      <div class="eta-list" id="etaList">
+        <div style="color:var(--c-muted);font-size:12px;text-align:center;padding:10px;">GPS ma'lumoti kutilmoqda...</div>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div style="display:flex;gap:10px;margin-bottom:16px;">
+      <button class="btn-secondary" id="btnStartRoute">▶ Yo'nalish boshlash</button>
+      <button class="btn-secondary" id="btnEndRoute">■ Tugatish</button>
+    </div>
+    <button class="btn-danger" id="btnLogout">Chiqish</button>
+
+    <!-- Log -->
+    <div class="card" style="margin-top:16px;">
+      <h3>📋 Log</h3>
+      <div class="log-box" id="logBox"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = '/api';
+const WS_BASE = (location.protocol==='https:'?'wss':'ws')+'://'+location.host;
+
+let token = localStorage.getItem('driver_token') || null;
+let vehicleId = localStorage.getItem('driver_vehicle_id') || null;
+let driverWs = null;
+let gpsWatchId = null;
+let gpsActive = false;
+let driverMap = null, driverMarker = null;
+let sendInterval = null;
+let currentLat = null, currentLng = null, currentSpeed = 0, currentHeading = 0, currentAccuracy = 0;
+
+// ── Pages ────────────────────────────────────────────────────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name)?.classList.add('active');
+}
+
+// ── Login ────────────────────────────────────────────────────
+document.getElementById('btnLogin').addEventListener('click', async () => {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  if (!username || !password) return alert('Ma\'lumotlarni kiriting');
+
+  const btn = document.getElementById('btnLogin');
+  btn.disabled = true; btn.textContent = 'Kirmoqda...';
+
+  try {
+    const res = await fetch(`${API}/token/`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.detail || 'Noto\'g\'ri ma\'lumotlar');
+
+    token = data.access;
+    localStorage.setItem('driver_token', token);
+    log('✅ Tizimga kirildi: ' + username, 'ok');
+
+    // Get vehicle
+    await loadDriverVehicle(username);
+    showPage('driver');
+    initDriverSession();
+  } catch(e) {
+    alert('Xatolik: ' + e.message);
+    log('❌ Login xatoligi: ' + e.message, 'err');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Kirish →';
+  }
+});
+
+async function loadDriverVehicle(username) {
+  // In a real app you'd have /api/driver/vehicle/ endpoint
+  // For now, try to find vehicle from local storage or use default
+  vehicleId = localStorage.getItem('driver_vehicle_id') || '1';
+  localStorage.setItem('driver_vehicle_id', vehicleId);
+}
+
+// ── Init Driver Session ───────────────────────────────────────
+function initDriverSession() {
+  initDriverMap();
+  startGPS();
+  connectDriverWS();
+}
+
+function initDriverMap() {
+  driverMap = L.map('driverMap', { zoomControl: false, attributionControl: false });
+  const _dt = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd' });
+  _dt.on('tileerror', function() {
+    driverMap.removeLayer(_dt);
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(driverMap);
+  });
+  _dt.addTo(driverMap);
+  driverMap.setView([41.2995, 69.2401], 14);
+}
+
+// ── GPS ──────────────────────────────────────────────────────
+function startGPS() {
+  if (!navigator.geolocation) { log('GPS qo\'llab-quvvatlanmaydi', 'err'); return; }
+  gpsWatchId = navigator.geolocation.watchPosition(onGPS, onGPSErr, {
+    enableHighAccuracy: true, maximumAge: 2000, timeout: 10000,
+  });
+  // Send every 3 seconds
+  sendInterval = setInterval(sendLocation, 3000);
+}
+
+function onGPS(pos) {
+  currentLat = pos.coords.latitude;
+  currentLng = pos.coords.longitude;
+  currentSpeed = (pos.coords.speed || 0) * 3.6; // m/s → km/h
+  currentHeading = pos.coords.heading || 0;
+  currentAccuracy = Math.round(pos.coords.accuracy || 0);
+
+  gpsActive = true;
+  document.getElementById('gpsStatus').className = 'gps-status active';
+  document.getElementById('gpsText').textContent = `GPS faol — ±${currentAccuracy}m`;
+  document.getElementById('d-speed').textContent = Math.round(currentSpeed);
+  document.getElementById('d-accuracy').textContent = currentAccuracy;
+  document.getElementById('d-lat').textContent = currentLat.toFixed(5);
+  document.getElementById('d-lng').textContent = currentLng.toFixed(5);
+
+  if (driverMap) {
+    const ll = [currentLat, currentLng];
+    if (!driverMarker) {
+      driverMarker = L.circleMarker(ll, {
+        radius:10, color:'#fff', weight:3, fillColor:'#ff6b35', fillOpacity:1,
+      }).addTo(driverMap).bindTooltip('Siz', { permanent: true, direction: 'top' });
+      driverMap.setView(ll, 15);
+    } else {
+      driverMarker.setLatLng(ll);
+    }
+  }
+}
+
+function onGPSErr(err) {
+  gpsActive = false;
+  document.getElementById('gpsStatus').className = 'gps-status';
+  document.getElementById('gpsText').textContent = 'GPS xatolik: ' + err.message;
+  log('GPS xatolik: ' + err.message, 'err');
+}
+
+function sendLocation() {
+  if (!currentLat || !driverWs || driverWs.readyState !== WebSocket.OPEN) return;
+  driverWs.send(JSON.stringify({
+    type: 'driver_location',
+    vehicle_id: vehicleId,
+    lat: currentLat,
+    lng: currentLng,
+    speed: Math.round(currentSpeed * 10) / 10,
+    heading: Math.round(currentHeading),
+    accuracy: currentAccuracy,
+  }));
+  log(`📡 GPS yuborildi: ${currentLat.toFixed(4)}, ${currentLng.toFixed(4)} | ${Math.round(currentSpeed)}km/h`, 'info');
+}
+
+// ── WebSocket ────────────────────────────────────────────────
+function connectDriverWS() {
+  if (!token || !vehicleId) return;
+  const url = `${WS_BASE}/ws/driver/${vehicleId}/?token=${token}`;
+  driverWs = new WebSocket(url);
+
+  driverWs.onopen = () => { log('✅ WebSocket ulandi', 'ok'); };
+  driverWs.onclose = () => {
+    log('⚠️ WebSocket uzildi. 5s da qayta...', 'err');
+    setTimeout(connectDriverWS, 5000);
+  };
+  driverWs.onerror = () => log('WebSocket xatoligi', 'err');
+  driverWs.onmessage = (ev) => {
+    const data = JSON.parse(ev.data);
+    if (data.type === 'location_received') {
+      renderETA(data.eta_stops || []);
+    }
+  };
+}
+
+// ── Passengers ───────────────────────────────────────────────
+const slider = document.getElementById('passengersSlider');
+slider.addEventListener('input', () => {
+  const val = +slider.value;
+  const cap = +slider.max;
+  document.getElementById('d-pass-num').textContent = val;
+  document.getElementById('d-pass-label').innerHTML = `${val} / <span id="d-capacity">${cap}</span>`;
+  const pct = Math.round((val/cap)*100);
+  const color = pct<50?'#22c55e':pct<80?'#f59e0b':'#ef4444';
+  document.getElementById('occFill').style.width = pct + '%';
+  document.getElementById('occFill').style.background = color;
+  // Send to WS
+  if (driverWs && driverWs.readyState === WebSocket.OPEN) {
+    driverWs.send(JSON.stringify({ type: 'update_passengers', count: val }));
+  }
+});
+
+// ── ETA render ───────────────────────────────────────────────
+function renderETA(etaList) {
+  const el = document.getElementById('etaList');
+  if (!etaList || !etaList.length) {
+    el.innerHTML = '<div style="color:var(--c-muted);font-size:12px;text-align:center;padding:8px;">Bekatlar yo\'q</div>';
+    return;
+  }
+  el.innerHTML = etaList.map(e => {
+    const color = e.eta_minutes <= 2 ? '#22c55e' : e.eta_minutes <= 8 ? '#00d4ff' : '#64748b';
+    return `<div class="eta-row">
+      <span class="eta-name">📍 ${e.stop_name}</span>
+      <span class="eta-badge" style="background:${color}20;color:${color};">~${e.eta_minutes} min</span>
+    </div>`;
+  }).join('');
+}
+
+// ── Controls ─────────────────────────────────────────────────
+document.getElementById('btnStartRoute').addEventListener('click', () => {
+  if (!gpsActive) { startGPS(); }
+  log('▶ Yo\'nalish boshlandi', 'ok');
+  showToast('Yo\'nalish boshlandi ✓');
+});
+
+document.getElementById('btnEndRoute').addEventListener('click', () => {
+  log('■ Yo\'nalish tugatildi', 'info');
+  showToast('Yo\'nalish tugatildi');
+  if (driverWs) driverWs.close();
+  if (gpsWatchId) navigator.geolocation.clearWatch(gpsWatchId);
+  clearInterval(sendInterval);
+});
+
+document.getElementById('btnLogout').addEventListener('click', () => {
+  localStorage.removeItem('driver_token');
+  localStorage.removeItem('driver_vehicle_id');
+  if (driverWs) driverWs.close();
+  if (gpsWatchId) navigator.geolocation.clearWatch(gpsWatchId);
+  clearInterval(sendInterval);
+  showPage('login');
+  log('Tizimdan chiqildi', 'info');
+});
+
+// ── Log ──────────────────────────────────────────────────────
+function log(msg, type='info') {
+  const box = document.getElementById('logBox');
+  const now = new Date().toTimeString().slice(0,8);
+  const div = document.createElement('div');
+  div.className = 'log-entry ' + (type || 'info');
+  div.textContent = `[${now}] ${msg}`;
+  box.insertBefore(div, box.firstChild);
+  if (box.children.length > 50) box.lastChild.remove();
+}
+
+function showToast(msg) {
+  const el = document.createElement('div');
+  el.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a2235;border:1px solid #1e2d45;padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;color:#e2e8f0;';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2500);
+}
+
+// ── Auto restore session ─────────────────────────────────────
+if (token && vehicleId) {
+  showPage('driver');
+  initDriverSession();
+  log('🔄 Sessiya tiklandi', 'ok');
+}
+</script>
+{% endblock %}

@@ -1,0 +1,16 @@
+[
+  {"model": "regions.region", "pk": 1,  "fields": {"name": "Tashkent city",    "name_uz": "Toshkent shahri",    "code": "TSH", "center_lat": 41.2995, "center_lng": 69.2401, "is_active": true}},
+  {"model": "regions.region", "pk": 2,  "fields": {"name": "Tashkent region",  "name_uz": "Toshkent viloyati",  "code": "TSV", "center_lat": 41.1173, "center_lng": 69.2182, "is_active": true}},
+  {"model": "regions.region", "pk": 3,  "fields": {"name": "Samarkand",        "name_uz": "Samarqand",          "code": "SMQ", "center_lat": 39.6542, "center_lng": 66.9597, "is_active": true}},
+  {"model": "regions.region", "pk": 4,  "fields": {"name": "Bukhara",          "name_uz": "Buxoro",             "code": "BXR", "center_lat": 39.7747, "center_lng": 64.4286, "is_active": true}},
+  {"model": "regions.region", "pk": 5,  "fields": {"name": "Namangan",         "name_uz": "Namangan",           "code": "NMG", "center_lat": 41.0011, "center_lng": 71.6725, "is_active": true}},
+  {"model": "regions.region", "pk": 6,  "fields": {"name": "Andijan",          "name_uz": "Andijon",            "code": "ADJ", "center_lat": 40.7829, "center_lng": 72.3442, "is_active": true}},
+  {"model": "regions.region", "pk": 7,  "fields": {"name": "Fergana",          "name_uz": "Farg'ona",           "code": "FRG", "center_lat": 40.3842, "center_lng": 71.7843, "is_active": true}},
+  {"model": "regions.region", "pk": 8,  "fields": {"name": "Kashkadarya",      "name_uz": "Qashqadaryo",        "code": "QSH", "center_lat": 38.8600, "center_lng": 65.7911, "is_active": true}},
+  {"model": "regions.region", "pk": 9,  "fields": {"name": "Surkhandarya",     "name_uz": "Surxondaryo",        "code": "SRX", "center_lat": 37.9400, "center_lng": 67.5700, "is_active": true}},
+  {"model": "regions.region", "pk": 10, "fields": {"name": "Jizzakh",          "name_uz": "Jizzax",             "code": "JZX", "center_lat": 40.1158, "center_lng": 67.8422, "is_active": true}},
+  {"model": "regions.region", "pk": 11, "fields": {"name": "Syrdarya",         "name_uz": "Sirdaryo",           "code": "SRD", "center_lat": 40.8393, "center_lng": 68.6644, "is_active": true}},
+  {"model": "regions.region", "pk": 12, "fields": {"name": "Khorezm",          "name_uz": "Xorazm",             "code": "XRZ", "center_lat": 41.3775, "center_lng": 60.3597, "is_active": true}},
+  {"model": "regions.region", "pk": 13, "fields": {"name": "Navoi",            "name_uz": "Navoiy",             "code": "NVY", "center_lat": 40.0840, "center_lng": 65.3792, "is_active": true}},
+  {"model": "regions.region", "pk": 14, "fields": {"name": "Karakalpakstan",   "name_uz": "Qoraqalpog'iston",   "code": "QRQ", "center_lat": 43.7687, "center_lng": 59.3678, "is_active": true}}
+]
